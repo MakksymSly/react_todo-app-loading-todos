@@ -15,7 +15,7 @@ export const TodoCard: React.FC<Props> = props => {
           data-cy="TodoStatus"
           type="checkbox"
           className="todo__status"
-          checked
+          checked={isCompleted}
         />
       </label>
 

@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 // import { UserWarning } from './UserWarning';
 // import { USER_ID } from './api/todos';
 import { Header } from './components/Header/Header';
@@ -10,14 +10,17 @@ import { Todo } from './types/Todo';
 import { getTodos } from './api/todos';
 import cn from 'classnames';
 import { Errors } from './utils/Errors';
+import { FilterTodosBy } from './utils/FilterTodosBy';
 
 export const App: React.FC = () => {
+  // kinda useless after the rigestration ?
   // if (!USER_ID) {
   //   return <UserWarning />;
   // }
 
-  const [todos, setTodos] = React.useState<Todo[]>([]);
-  const [hasError, setHasError] = React.useState<Errors>(Errors.NoError);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [hasError, setHasError] = useState<Errors>(Errors.NoError);
+  const [filterBy, setFilterBy] = useState<FilterTodosBy>(FilterTodosBy.All);
 
   useEffect(() => {
     setHasError(Errors.NoError);
@@ -28,22 +31,42 @@ export const App: React.FC = () => {
         setTodos(response);
       } catch (error) {
         setHasError(Errors.UnableToLoad);
+        setTimeout(() => {
+          setHasError(Errors.NoError);
+        }, 3000);
       }
     };
 
     getTodosData();
   }, []);
 
+  const filteredTodos = todos.filter(todo => {
+    switch (filterBy) {
+      case FilterTodosBy.Active:
+        return !todo.completed;
+      case FilterTodosBy.Completed:
+        return todo.completed;
+      default:
+        return true;
+    }
+  });
+
+  const uncompletedTodos = todos.filter(todo => !todo.completed).length;
+
   return (
     <div className="todoapp">
-      <h1 className="todoapp__title">todos</h1>
-      <Header />
-      <TodoList todos={todos} />
-      {/* Hide the list if there are no todos */}
-      {/* Hide the footer if there are no todos */}
-      {todos.length > 0 && <Footer />}
-      {/* DON'T use conditional rendering to hide the notification */}
-      {/* Add the 'hidden' class to hide the message smoothly */}
+      <div className="todoapp__content">
+        <h1 className="todoapp__title">todos</h1>
+        <Header />
+        <TodoList todos={filteredTodos} />
+        {todos.length > 0 && (
+          <Footer
+            uncompletedTodos={uncompletedTodos}
+            filterBy={filterBy}
+            setFilteredBy={setFilterBy}
+          />
+        )}
+      </div>
       <div
         data-cy="ErrorNotification"
         className={cn(
